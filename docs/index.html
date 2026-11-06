@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Video Viral Politik</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #16181c; --muted: #5f6873;
+    --line: #e3e6ea; --accent: #1d72e8; --accent-text: #ffffff; --warn: #b26b00; --chip: #eef1f5;
+    --yt: #d93025; --x: #16181c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1114; --card: #181b20; --text: #e9ecef; --muted: #9aa3ad;
+      --line: #2a2f36; --accent: #4a94ff; --accent-text: #ffffff; --warn: #f0a741; --chip: #22262c;
+      --yt: #ff5a4f; --x: #e9ecef;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 24px 16px 8px; max-width: 1200px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  .sub { color: var(--muted); font-size: 14px; }
+  .bar { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar-in { max-width: 1200px; margin: 0 auto; padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .bar button, .bar select, .bar input {
+    font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--line);
+    border-radius: 8px; padding: 6px 12px; }
+  .bar button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .bar input { flex: 1 1 180px; min-width: 0; }
+  .bar .refresh { font-weight: 600; }
+  .bar .refresh:disabled { opacity: .6; cursor: progress; }
+  main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
+         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  .thumb { aspect-ratio: 16 / 9; background: #000; position: relative; cursor: pointer; border: 0; padding: 0; width: 100%; display: block; }
+  .thumb img, .thumb video, .thumb iframe { width: 100%; height: 100%; object-fit: contain; display: block; border: 0; }
+  .play { position: absolute; inset: 0; display: grid; place-items: center; }
+  .play span { width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,.6); color: #fff; display: grid; place-items: center; font-size: 22px; }
+  .dur { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.75); color: #fff; font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+  .body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .src { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .src .p-youtube { color: var(--yt); } .src .p-x { color: var(--x); }
+  .title { font-weight: 600; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .desc { color: var(--muted); font-size: 13px; white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .copyrow { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font: inherit; font-size: 12px; color: var(--text); background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+  .meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .meta b { color: var(--text); }
+  .meta a { color: inherit; }
+  .excluded { color: var(--warn); font-size: 12px; font-weight: 600; }
+  .actions { display: flex; gap: 8px; margin-top: auto; padding-top: 4px; }
+  .btn { font: inherit; font-size: 14px; border-radius: 8px; padding: 8px 12px; text-decoration: none; text-align: center; cursor: pointer; border: 1px solid var(--line); background: var(--chip); color: var(--text); white-space: nowrap; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); flex: 1; font-weight: 600; }
+  .btn:disabled { opacity: .6; cursor: progress; }
+  .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 48px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Video Viral Politik Indonesia</h1>
+  <div class="sub"><span id="sub">Memuat data…</span> <span id="checked"></span></div>
+</header>
+<div class="bar"><div class="bar-in">
+  <button data-f="ok" aria-pressed="true">Politik</button>
+  <button data-f="excluded" aria-pressed="false">Dibuang (TV/media)</button>
+  <button id="refresh" class="refresh" title="Muat data terbaru sekarang">🔄 Refresh</button>
+  <select id="platform" aria-label="Platform">
+    <option value="">Semua platform</option>
+    <option value="youtube">YouTube</option>
+    <option value="x">X/Twitter</option>
+  </select>
+  <select id="sort" aria-label="Urutkan">
+    <option value="found">Terbaru ditemukan</option>
+    <option value="views">Tayangan terbanyak</option>
+    <option value="likes">Like terbanyak</option>
+  </select>
+  <input id="q" type="search" placeholder="Cari judul atau channel…" aria-label="Cari">
+</div></div>
+<main id="grid"></main>
+
+<script>
+const fmt = n => n == null ? "–" : Intl.NumberFormat("id-ID", { notation: "compact" }).format(n);
+const dur = s => !s ? "" : s >= 3600
+  ? `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`
+  : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const tgl = s => s ? new Date(s).toLocaleDateString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+const PLATFORM = { youtube: "YouTube", x: "X" };
+
+let data = { items: [] }, filter = "ok";
+const byId = new Map();
+
+function actions(it) {
+  if (it.platform === "x") return `
+    <button class="btn primary" data-dl="${esc(it.id)}">⬇ Download</button>
+    <a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">Buka di X</a>`;
+  if (localApp) return `
+    <button class="btn primary" data-ytdl="${esc(it.id)}">⬇ Download</button>
+    <a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">YouTube</a>`;
+  return `
+    <a class="btn primary" href="${esc(it.url)}" target="_blank" rel="noopener">▶ Buka di YouTube</a>
+    <button class="btn" data-copy="${esc(it.url)}">Salin link</button>`;
+}
+
+// Tombol Download YouTube hanya aktif kalau dashboard dibuka lewat aplikasi lokal (app.py).
+let localApp = false;
+const localCheck = fetch("api/ping", { cache: "no-store" })
+  .then(r => r.ok ? r.json() : null).then(j => { localApp = !!(j && j.ok); }).catch(() => {});
+
+async function saveBlob(resp, fallbackName) {
+  const cd = resp.headers.get("Content-Disposition") || "";
+  const m = cd.match(/filename\*=UTF-8''([^;]+)/);
+  const name = m ? decodeURIComponent(m[1]) : fallbackName;
+  const url = URL.createObjectURL(await resp.blob());
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+async function downloadYoutube(btn, it) {
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Mengunduh… (bisa ±1 menit)";
+  try {
+    const r = await fetch(`api/download?id=${encodeURIComponent(it.youtube_id)}`);
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+    await saveBlob(r, `${it.youtube_id}.mp4`);
+    btn.textContent = "✓ Tersimpan";
+  } catch (err) {
+    alert("Gagal mengunduh: " + err.message);
+    btn.textContent = label;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function render() {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const plat = document.getElementById("platform").value;
+  const sort = document.getElementById("sort").value;
+  let items = data.items.filter(it => it.status === filter && (!plat || it.platform === plat));
+  if (q) items = items.filter(it => [it.title, it.text, it.author].join(" ").toLowerCase().includes(q));
+  const key = { found: it => it.found_at || "", views: it => it.views || 0, likes: it => it.likes || 0 }[sort];
+  items.sort((a, b) => key(a) < key(b) ? 1 : key(a) > key(b) ? -1 : 0);
+
+  const grid = document.getElementById("grid");
+  if (!items.length) { grid.innerHTML = '<div class="empty">Belum ada video di sini.</div>'; return; }
+  grid.innerHTML = items.map(it => `
+    <article class="card">
+      <button class="thumb" data-play="${esc(it.id)}" aria-label="Putar video">
+        ${it.thumbnail ? `<img loading="lazy" referrerpolicy="no-referrer" src="${esc(it.thumbnail)}" alt="">` : ""}
+        <span class="play"><span>▶</span></span>
+        ${it.duration ? `<span class="dur">${dur(it.duration)}</span>` : ""}
+      </button>
+      <div class="body">
+        <span class="src"><span class="p-${esc(it.platform)}">${PLATFORM[it.platform] || esc(it.platform)}</span> · ${esc(it.source)}</span>
+        ${it.status === "excluded" ? `<span class="excluded">Dibuang: ${esc(it.excluded_reason)}</span>` : ""}
+        <div class="title">${esc(it.title || it.text)}</div>
+        ${it.text && it.text !== it.title ? `<div class="desc">${esc(it.text)}</div>` : ""}
+        <div class="copyrow">
+          <button class="chip" data-copyf="both" data-id="${esc(it.id)}">📋 Salin judul${it.text && it.text !== it.title ? " &amp; deskripsi" : ""}</button>
+        </div>
+        <div class="meta">
+          <a href="${esc(it.author_url)}" target="_blank" rel="noopener">${esc(it.author)}</a>
+          <span>${tgl(it.posted_at)}</span>
+        </div>
+        <div class="meta">
+          ${it.views != null ? `<span><b>${fmt(it.views)}</b> tayangan</span>` : ""}
+          ${it.likes != null ? `<span><b>${fmt(it.likes)}</b> like</span>` : ""}
+        </div>
+        <div class="actions">${actions(it)}</div>
+      </div>
+    </article>`).join("");
+}
+
+async function download(btn, it) {
+  const name = `${it.author.replace(/[^\w-]/g, "")}_${it.id.split(":")[1]}.mp4`;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Mengunduh…";
+  try {
+    const r = await fetch(it.video_url);
+    if (!r.ok) throw new Error(r.status);
+    const url = URL.createObjectURL(await r.blob());
+    const a = Object.assign(document.createElement("a"), { href: url, download: name });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    btn.textContent = "✓ Tersimpan";
+  } catch {
+    // Kalau unduhan langsung gagal, buka videonya di tab baru (simpan lewat menu ⋮ → Download).
+    window.open(it.video_url, "_blank", "noopener");
+    btn.textContent = label;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("grid").addEventListener("click", async e => {
+  const dl = e.target.closest("[data-dl]");
+  if (dl) return download(dl, byId.get(dl.dataset.dl));
+  const yd = e.target.closest("[data-ytdl]");
+  if (yd) return downloadYoutube(yd, byId.get(yd.dataset.ytdl));
+  const cp = e.target.closest("[data-copy], [data-copyf]");
+  if (cp) {
+    const it = byId.get(cp.dataset.id);
+    const value = !cp.dataset.copyf ? cp.dataset.copy
+      : [it.title, it.text && it.text !== it.title ? it.text : ""].filter(Boolean).join("\n\n");
+    const label = cp.textContent;
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      // Cadangan untuk browser yang tidak mengizinkan clipboard API.
+      const ta = Object.assign(document.createElement("textarea"), { value });
+      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+    }
+    cp.textContent = "✓ Disalin";
+    setTimeout(() => { cp.textContent = label; }, 1500);
+    return;
+  }
+  const play = e.target.closest("[data-play]");
+  if (play) {
+    const it = byId.get(play.dataset.play);
+    play.innerHTML = it.platform === "youtube"
+      ? `<iframe src="https://www.youtube-nocookie.com/embed/${esc(it.youtube_id)}?autoplay=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`
+      : `<video src="${esc(it.video_url)}" controls autoplay playsinline></video>`;
+    play.removeAttribute("data-play");
+  }
+});
+document.querySelectorAll(".bar button[data-f]").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.f;
+  document.querySelectorAll(".bar button[data-f]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
+}));
+["platform", "sort"].forEach(id => document.getElementById(id).addEventListener("change", render));
+document.getElementById("q").addEventListener("input", render);
+
+// Muat data. Halaman hanya digambar ulang kalau datanya berubah, supaya video yang
+// sedang diputar tidak terhenti saat refresh otomatis.
+const AUTO_REFRESH_MIN = 5;
+async function loadData(manual = false) {
+  const btn = document.getElementById("refresh");
+  if (manual) { btn.disabled = true; btn.textContent = "🔄 Memuat…"; }
+  try {
+    const r = await fetch(`videos.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    await localCheck;
+    const changed = d.updated_at !== data.updated_at || d.items.length !== data.items.length;
+    data = d;
+    byId.clear();
+    d.items.forEach(it => byId.set(it.id, it));
+    const ok = d.items.filter(i => i.status === "ok").length;
+    const ex = d.items.filter(i => i.status === "excluded").length;
+    const when = d.updated_at ? new Date(d.updated_at).toLocaleString("id-ID") : "belum pernah";
+    document.querySelector('[data-f="ok"]').textContent = `Politik (${ok})`;
+    document.querySelector('[data-f="excluded"]').textContent = `Dibuang (${ex})`;
+    document.getElementById("sub").textContent =
+      `${ok} video politik · ${ex} dibuang (TV/media) · YouTube ≥ ${fmt(d.min_views)} tayangan · X ≥ ${fmt(d.min_likes_x)} like · bot terakhir jalan ${when}`;
+    if (changed || manual) render();
+  } catch {
+    if (!data.items.length) { document.getElementById("sub").textContent = "Belum ada data. Jalankan bot sekali dulu."; render(); }
+  } finally {
+    document.getElementById("checked").textContent =
+      `· dicek ${new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}, otomatis tiap ${AUTO_REFRESH_MIN} menit`;
+    if (manual) { btn.disabled = false; btn.textContent = "🔄 Refresh"; }
+  }
+}
+document.getElementById("refresh").addEventListener("click", () => loadData(true));
+setInterval(() => loadData(false), AUTO_REFRESH_MIN * 60 * 1000);
+loadData(true);
+</script>
+</body>
+</html>
