@@ -1,0 +1,7 @@
+downloads/
+secrets.local.json
+app.local.json
+run-log.txt
+.claude/
+__pycache__/
+.venv/
