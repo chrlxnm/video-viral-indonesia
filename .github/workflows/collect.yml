@@ -1,0 +1,53 @@
+name: Kumpulkan video viral Indonesia
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # setiap 3 jam (waktu UTC)
+  workflow_dispatch:          # tombol "Run workflow" untuk menjalankan manual
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Pasang dependensi
+        run: pip install -r requirements.txt
+
+      - name: Cari video viral
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          MIN_VIEWS: ${{ vars.MIN_VIEWS }}
+          MIN_LIKES_X: ${{ vars.MIN_LIKES_X }}
+          LOOKBACK_DAYS: ${{ vars.LOOKBACK_DAYS }}
+          MAX_DURATION: ${{ vars.MAX_DURATION }}
+          YT_CATEGORIES: ${{ vars.YT_CATEGORIES }}
+          YT_TYPE_QUERIES: ${{ vars.YT_TYPE_QUERIES }}
+          SUBREDDITS: ${{ vars.SUBREDDITS }}
+          EXTRA_BLOCKED: ${{ vars.EXTRA_BLOCKED }}
+        run: python src/collect.py
+
+      - name: Simpan daftar video ke repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/videos.json
+          if git diff --cached --quiet; then
+            echo "Daftar tidak berubah."
+          else
+            git commit -m "Update daftar video $(date -u +'%Y-%m-%d %H:%M') UTC"
+            git push
+          fi
